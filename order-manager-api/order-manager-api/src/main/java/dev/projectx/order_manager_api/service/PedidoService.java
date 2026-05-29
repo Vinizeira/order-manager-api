@@ -3,6 +3,8 @@ package dev.projectx.order_manager_api.service;
 import dev.projectx.order_manager_api.dto.ItemPedidoRequest;
 import dev.projectx.order_manager_api.dto.PedidoRequest;
 import dev.projectx.order_manager_api.dto.PedidoResponse;
+import dev.projectx.order_manager_api.exception.BusinessException;
+import dev.projectx.order_manager_api.exception.ResourceNotFoundException;
 import dev.projectx.order_manager_api.model.*;
 import dev.projectx.order_manager_api.repository.ClienteRepository;
 import dev.projectx.order_manager_api.repository.PedidoRepository;
@@ -28,16 +30,15 @@ public class PedidoService {
 
     public PedidoResponse criar(PedidoRequest request){
         Cliente cliente = clienteRepository.findById(request.clienteId())
-                .orElseThrow(() -> new RuntimeException("Cliente não encontrado"));
-
+                .orElseThrow(() -> new ResourceNotFoundException("Cliente não encontrado"));
         Pedido pedido = new Pedido(cliente);
 
         for (ItemPedidoRequest itemRequest : request.itens()) {
             Produto produto = produtoRepository.findById(itemRequest.produtoId())
-                    .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Produto não encontrado"));
 
             if (produto.getEstoque() < itemRequest.quantidade()) {
-                throw new RuntimeException("Estoque insuficiente para: " + produto.getNome());
+                throw new BusinessException("Estoque insuficiente para: " + produto.getNome());
             }
             ItemPedido item = new ItemPedido(pedido, produto, itemRequest.quantidade());
             pedido.getItens().add(item);

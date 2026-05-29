@@ -2,6 +2,7 @@ package dev.projectx.order_manager_api.service;
 
 import dev.projectx.order_manager_api.dto.CategoriaRequest;
 import dev.projectx.order_manager_api.dto.CategoriaResponse;
+import dev.projectx.order_manager_api.exception.ResourceNotFoundException;
 import dev.projectx.order_manager_api.model.Categoria;
 import dev.projectx.order_manager_api.repository.CategoriaRepository;
 import org.springframework.stereotype.Service;
@@ -26,7 +27,7 @@ public class CategoriaService {
 
     public CategoriaResponse buscarPorId(Long id) {
         Categoria categoria = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Categoria não encontrada"));
+                .orElseThrow(() -> new ResourceNotFoundException("Categoria não encontrada"));
                 return new CategoriaResponse(categoria.getId(), categoria.getNome());
     }
 

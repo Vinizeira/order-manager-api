@@ -2,6 +2,7 @@ package dev.projectx.order_manager_api.service;
 
 import dev.projectx.order_manager_api.dto.ProdutoRequest;
 import dev.projectx.order_manager_api.dto.ProdutoResponse;
+import dev.projectx.order_manager_api.exception.ResourceNotFoundException;
 import dev.projectx.order_manager_api.model.Categoria;
 import dev.projectx.order_manager_api.model.Produto;
 import dev.projectx.order_manager_api.repository.CategoriaRepository;
@@ -31,7 +32,7 @@ public class ProdutoService {
 
     public ProdutoResponse buscarPorId(Long id) {
         Produto produto = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Produto não encontrado"));
                 return new ProdutoResponse(produto.getId(),
                         produto.getNome(),
                         produto.getPreco(),
@@ -41,7 +42,7 @@ public class ProdutoService {
 
     public ProdutoResponse salvar(ProdutoRequest request) {
         Categoria categoria = categoriaRepository.findById(request.categoriaId())
-                .orElseThrow(() -> new RuntimeException("Categoria não encontrada"));
+                .orElseThrow(() -> new ResourceNotFoundException("Categoria não encontrada"));
         Produto produto = new Produto(request.nome(), request.preco(), request.estoque(), categoria);
         repository.save(produto);
         return new ProdutoResponse(produto.getId(), produto.getNome(), produto.getPreco(), produto.getEstoque(), produto.getCategoria().getNome());

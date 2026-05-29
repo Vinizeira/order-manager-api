@@ -2,6 +2,7 @@ package dev.projectx.order_manager_api.service;
 
 import dev.projectx.order_manager_api.dto.ClienteRequest;
 import dev.projectx.order_manager_api.dto.ClienteResponse;
+import dev.projectx.order_manager_api.exception.ResourceNotFoundException;
 import dev.projectx.order_manager_api.model.Cliente;
 import dev.projectx.order_manager_api.repository.ClienteRepository;
 import org.springframework.stereotype.Service;
@@ -29,7 +30,7 @@ public class ClienteService {
 
     public ClienteResponse buscarPorId(Long id) {
         Cliente cliente = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Cliente não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Cliente não encontrado"));
                 return new ClienteResponse(cliente.getId(),
                         cliente.getNome(),
                         cliente.getEmail(),
