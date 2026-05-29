@@ -3,16 +3,14 @@ package dev.projectx.order_manager_api.service;
 import dev.projectx.order_manager_api.dto.ItemPedidoRequest;
 import dev.projectx.order_manager_api.dto.PedidoRequest;
 import dev.projectx.order_manager_api.dto.PedidoResponse;
-import dev.projectx.order_manager_api.model.Cliente;
-import dev.projectx.order_manager_api.model.ItemPedido;
-import dev.projectx.order_manager_api.model.Pedido;
-import dev.projectx.order_manager_api.model.Produto;
+import dev.projectx.order_manager_api.model.*;
 import dev.projectx.order_manager_api.repository.ClienteRepository;
 import dev.projectx.order_manager_api.repository.PedidoRepository;
 import dev.projectx.order_manager_api.repository.ProdutoRepository;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -75,5 +73,40 @@ public class PedidoService {
                 .toList();
     }
 
+    public List<PedidoResponse> buscarPorStatus(StatusPedido status){
+        return pedidoRepository.findByStatus(status)
+                .stream()
+                .map(p -> new PedidoResponse(
+                        p.getId(),
+                        p.getCliente().getNome(),
+                        p.getData(),
+                        p.getStatus().name(),
+                        p.getTotal()))
+                .toList();
+    }
+
+    public List<PedidoResponse> buscarPorCliente(Long clienteId) {
+        return pedidoRepository.findByClienteId(clienteId)
+                .stream()
+                .map(p -> new PedidoResponse(
+                        p.getId(),
+                        p.getCliente().getNome(),
+                        p.getData(),
+                        p.getStatus().name(),
+                        p.getTotal()))
+                .toList();
+    }
+
+    public List<PedidoResponse> buscarPorPeriodo(LocalDate inicio, LocalDate fim) {
+        return pedidoRepository.findByDataBetween(inicio, fim)
+                .stream()
+                .map(p -> new PedidoResponse(
+                        p.getId(),
+                        p.getCliente().getNome(),
+                        p.getData(),
+                        p.getStatus().name(),
+                        p.getTotal()))
+                .toList();
+    }
 
 }

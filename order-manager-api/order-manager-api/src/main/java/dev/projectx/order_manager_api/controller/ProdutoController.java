@@ -39,4 +39,14 @@ public class ProdutoController {
         service.deletar(id);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/categoria/{categoriaId}")
+    public List<ProdutoResponse> buscarPorCategoria(@PathVariable Long categoriaId) {
+        return service.buscarPorCategoria(categoriaId);
+    }
+
+    @GetMapping("/estoque-baixo")
+    public List<ProdutoResponse> buscarEstoqueBaixo(@RequestParam Integer quantidade) {
+        return service.buscarEstoqueBaixo(quantidade);
+    }
 }

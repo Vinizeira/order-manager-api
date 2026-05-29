@@ -51,4 +51,17 @@ public class ProdutoService {
         repository.deleteById(id);
     }
 
+    public List<ProdutoResponse> buscarPorCategoria(Long categoriaId) {
+        return repository.findByCategoriaId(categoriaId)
+                .stream()
+                .map(p -> new ProdutoResponse(p.getId(), p.getNome(), p.getPreco(), p.getEstoque(), p.getCategoria().getNome()))
+                .toList();
+    }
+
+    public List<ProdutoResponse> buscarEstoqueBaixo(Integer quantidade) {
+        return repository.findByEstoqueLessThan(quantidade)
+                .stream()
+                .map(p -> new ProdutoResponse(p.getId(), p.getNome(), p.getPreco(), p.getEstoque(), p.getCategoria().getNome()))
+                .toList();
+    }
 }
