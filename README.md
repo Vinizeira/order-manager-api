@@ -34,12 +34,13 @@ Every decision in this project — from architecture to business rules — was m
 - 📉 Automatic stock deduction on order creation
 - 🚫 Block orders when stock is insufficient
 - ✅ Input validation with clear error messages
+- 🔍 Filters by status, client, date range, category and low stock
+- ⚠️ Standardized error responses with proper HTTP status codes
 - 🔒 Sensitive data protected via environment variables
 
 ### Planned
 
 - 🔄 Order status update (`PENDING → PAID → SHIPPED → DELIVERED → CANCELLED`)
-- 🔍 Filters by status, client, and date range
 - 📊 Sales reports
 - 🔐 Authentication with Spring Security and JWT
 - 📖 API documentation with Swagger
@@ -58,7 +59,8 @@ HTTP Request
 ├── Service Layer      → Business logic and rules
 ├── Repository Layer   → Database operations via Spring Data JPA
 ├── Model Layer        → Entities mapped to database tables
-└── DTO Layer          → Controls what enters and exits the API
+├── DTO Layer          → Controls what enters and exits the API
+└── Exception Layer    → Global error handling with standardized responses
 ```
 
 ---
@@ -85,6 +87,10 @@ src/
             │   ├── PedidoResponse.java
             │   ├── ProdutoRequest.java
             │   └── ProdutoResponse.java
+            ├── exception/
+            │   ├── BusinessException.java
+            │   ├── GlobalExceptionHandler.java
+            │   └── ResourceNotFoundException.java
             ├── model/
             │   ├── Categoria.java
             │   ├── Cliente.java
@@ -125,6 +131,8 @@ src/
 |--------|----------|-------------|
 | GET | `/produtos` | List all products |
 | GET | `/produtos/{id}` | Get product by id |
+| GET | `/produtos/categoria/{categoriaId}` | Filter products by category |
+| GET | `/produtos/estoque-baixo?quantidade={n}` | Filter products with low stock |
 | POST | `/produtos` | Create product |
 | DELETE | `/produtos/{id}` | Delete product |
 
@@ -142,7 +150,31 @@ src/
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/pedidos` | List all orders |
+| GET | `/pedidos/status/{status}` | Filter orders by status |
+| GET | `/pedidos/cliente/{clienteId}` | Filter orders by client |
+| GET | `/pedidos/periodo?inicio={date}&fim={date}` | Filter orders by date range |
 | POST | `/pedidos` | Create order |
+
+---
+
+## ⚠️ Error Responses
+
+All errors return a standardized JSON response:
+
+```json
+{
+    "timestamp": "2026-05-29T19:00:00",
+    "status": 404,
+    "error": "Not Found",
+    "message": "Cliente não encontrado"
+}
+```
+
+| Status | When |
+|--------|------|
+| 400 | Validation error or business rule violation |
+| 404 | Resource not found |
+| 500 | Unexpected internal error |
 
 ---
 
@@ -150,7 +182,7 @@ src/
 
 - Every order starts with status `PENDING`
 - Stock is automatically deducted when an order is created
-- Orders with insufficient stock are blocked
+- Orders with insufficient stock are blocked with a clear error message
 - Order total is calculated automatically from items
 - CPF and phone are stored as digits only, formatted on response
 - Email is stored in lowercase to prevent duplicates
@@ -214,13 +246,11 @@ Run the application:
 ## 🗺️ Development Roadmap
 
 ### Phase 1 — Setup ✅
-
 - [x] Project created with Spring Initializr
 - [x] PostgreSQL connected via environment variables
 - [x] Package structure defined
 
 ### Phase 2 — Entities and Database ✅
-
 - [x] `Categoria` entity
 - [x] `Produto` entity with stock
 - [x] `Cliente` entity with CPF and phone
@@ -230,55 +260,47 @@ Run the application:
 - [x] All tables created automatically via JPA
 
 ### Phase 3 — Repositories and CRUD ✅
-
 - [x] Repositories for all entities
 - [x] Services with `list`, `findById`, `save`, `delete`
 - [x] Controllers with `GET`, `POST`, `DELETE` endpoints
 - [x] Tested via Postman
 
 ### Phase 4 — DTOs and Validations ✅
-
 - [x] Request and Response DTOs for all entities
 - [x] Validations with `@NotBlank`, `@NotNull`, `@Positive`, `@Email`, `@CPF`
 - [x] Controllers and services adapted to use DTOs
 - [x] CPF and phone normalized on save, formatted on response
 
 ### Phase 5 — Orders and Business Rules ✅
-
 - [x] Order creation with multiple items
 - [x] Automatic total calculation
 - [x] Automatic stock deduction
 - [x] Block orders with insufficient stock
 
-### Phase 6 — Filters and Queries 🔲
+### Phase 6 — Filters and Queries ✅
+- [x] Filter orders by status
+- [x] Filter orders by client
+- [x] Filter orders by date range
+- [x] Filter products by category
+- [x] Filter products with low stock
 
-- [ ] Filter orders by status
-- [ ] Filter orders by client
-- [ ] Filter orders by date range
-- [ ] Filter products by category
-- [ ] Filter products with low stock
-
-### Phase 7 — Error Handling 🔲
-
-- [ ] Custom exceptions
-- [ ] Global exception handler with `@ControllerAdvice`
-- [ ] Standardized error responses with HTTP status
+### Phase 7 — Error Handling ✅
+- [x] Custom exceptions (`ResourceNotFoundException`, `BusinessException`)
+- [x] Global exception handler with `@RestControllerAdvice`
+- [x] Standardized error responses with HTTP status
 
 ### Phase 8 — Documentation 🔲
-
 - [ ] Swagger / OpenAPI integration
 - [ ] Annotated endpoints
 - [ ] README completed
 
 ### Phase 9 — Security 🔲
-
 - [ ] Spring Security + JWT
 - [ ] User registration and login
 - [ ] Protected routes
 - [ ] Role-based access (`ADMIN`, `USER`)
 
 ### Phase 10 — Deploy 🔲
-
 - [ ] Dockerfile
 - [ ] Docker Compose with API + PostgreSQL
 - [ ] Deploy on Railway or Render
