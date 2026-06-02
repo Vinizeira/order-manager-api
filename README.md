@@ -290,9 +290,9 @@ Run the application:
 - [x] Standardized error responses with HTTP status
 
 ### Phase 8 — Documentation 🔲
-- [ ] Swagger / OpenAPI integration
-- [ ] Annotated endpoints
-- [ ] README completed
+- [x] Swagger / OpenAPI integration
+- [x] Annotated endpoints
+- [x] README completed
 
 ### Phase 9 — Security 🔲
 - [ ] Spring Security + JWT
