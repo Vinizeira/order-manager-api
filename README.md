@@ -37,13 +37,16 @@ Every decision in this project — from architecture to business rules — was m
 - 🔍 Filters by status, client, date range, category and low stock
 - ⚠️ Standardized error responses with proper HTTP status codes
 - 🔒 Sensitive data protected via environment variables
+- 🔐 Authentication with Spring Security and JWT
+- 👥 Role-based access control with `ROLE_USER` and `ROLE_ADMIN`
+- 🔑 Password encryption with BCrypt
+- 🧑‍💼 Initial admin user created by environment configuration
+- 📖 Swagger/OpenAPI documentation with Bearer Token support
 
 ### Planned
 
 - 🔄 Order status update (`PENDING → PAID → SHIPPED → DELIVERED → CANCELLED`)
 - 📊 Sales reports
-- 🔐 Authentication with Spring Security and JWT
-- 📖 API documentation with Swagger
 - 🐳 Docker and deployment
 
 ---
@@ -116,46 +119,90 @@ src/
 
 ## 🔗 Endpoints
 
+### Autenticação
+
+| Method | Endpoint | Access | Description |
+|--------|----------|--------|-------------|
+| POST | `/auth/register` | Public | Register a regular user |
+| POST | `/auth/login` | Public | Authenticate and return a JWT |
+
+### Usuários
+
+| Method | Endpoint | Access | Description |
+|--------|----------|--------|-------------|
+| GET | `/usuarios` | ADMIN | List all users |
+| PATCH | `/usuarios/me/senha` | USER / ADMIN | Change authenticated user's password |
+
 ### Categorias
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/categorias` | List all categories |
-| GET | `/categorias/{id}` | Get category by id |
-| POST | `/categorias` | Create category |
-| DELETE | `/categorias/{id}` | Delete category |
+| Method | Endpoint | Access | Description |
+|--------|----------|--------|-------------|
+| GET | `/categorias` | USER / ADMIN | List all categories |
+| GET | `/categorias/{id}` | USER / ADMIN | Get category by id |
+| POST | `/categorias` | ADMIN | Create category |
+| DELETE | `/categorias/{id}` | ADMIN | Delete category |
 
 ### Produtos
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/produtos` | List all products |
-| GET | `/produtos/{id}` | Get product by id |
-| GET | `/produtos/categoria/{categoriaId}` | Filter products by category |
-| GET | `/produtos/estoque-baixo?quantidade={n}` | Filter products with low stock |
-| POST | `/produtos` | Create product |
-| DELETE | `/produtos/{id}` | Delete product |
+| Method | Endpoint | Access | Description |
+|--------|----------|--------|-------------|
+| GET | `/produtos` | USER / ADMIN | List all products |
+| GET | `/produtos/{id}` | USER / ADMIN | Get product by id |
+| GET | `/produtos/categoria/{categoriaId}` | USER / ADMIN | Filter products by category |
+| GET | `/produtos/estoque-baixo?quantidade={n}` | ADMIN | Filter products with low stock |
+| POST | `/produtos` | ADMIN | Create product |
+| DELETE | `/produtos/{id}` | ADMIN | Delete product |
 
 ### Clientes
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/clientes` | List all clients |
-| GET | `/clientes/{id}` | Get client by id |
-| POST | `/clientes` | Create client |
-| DELETE | `/clientes/{id}` | Delete client |
+| Method | Endpoint | Access | Description |
+|--------|----------|--------|-------------|
+| GET | `/clientes` | ADMIN | List all clients |
+| GET | `/clientes/{id}` | ADMIN | Get client by id |
+| POST | `/clientes` | ADMIN | Create client |
+| DELETE | `/clientes/{id}` | ADMIN | Delete client |
 
 ### Pedidos
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/pedidos` | List all orders |
-| GET | `/pedidos/status/{status}` | Filter orders by status |
-| GET | `/pedidos/cliente/{clienteId}` | Filter orders by client |
-| GET | `/pedidos/periodo?inicio={date}&fim={date}` | Filter orders by date range |
-| POST | `/pedidos` | Create order |
+| Method | Endpoint | Access | Description |
+|--------|----------|--------|-------------|
+| GET | `/pedidos` | ADMIN | List all orders |
+| GET | `/pedidos/status/{status}` | ADMIN | Filter orders by status |
+| GET | `/pedidos/cliente/{clienteId}` | ADMIN | Filter orders by client |
+| GET | `/pedidos/periodo?inicio={date}&fim={date}` | ADMIN | Filter orders by date range |
+| POST | `/pedidos` | USER / ADMIN | Create order |
 
 ---
+
+## 🔐 Authentication and Authorization
+
+The API uses JWT Bearer Token authentication.
+
+Public routes:
+
+- `POST /auth/register`
+- `POST /auth/login`
+- Swagger/OpenAPI routes
+
+Protected routes must receive the token in the `Authorization` header:
+
+```http
+Authorization: Bearer your_jwt_token_here
+```
+
+Default access rules:
+
+- `ROLE_USER`: can view product/category catalog and create orders.
+- `ROLE_ADMIN`: can manage products, categories, clients, orders and users.
+
+The development admin user is created automatically if it does not exist:
+
+```text
+email: admin@admin.com
+password: admin123
+```
+
+For production, change `ADMIN_PASSWORD` and `JWT_SECRET` using environment variables before running the application.
 
 ## ⚠️ Error Responses
 
@@ -173,6 +220,8 @@ All errors return a standardized JSON response:
 | Status | When |
 |--------|------|
 | 400 | Validation error or business rule violation |
+| 401 | Missing, invalid or expired token |
+| 403 | Authenticated user does not have permission |
 | 404 | Resource not found |
 | 500 | Unexpected internal error |
 
@@ -216,9 +265,15 @@ Set environment variables:
 
 ```bash
 DB_URL=jdbc:postgresql://localhost:5432/order_manager
-DB_USERNAME=your_username
+DB_USER=your_username
 DB_PASSWORD=your_password
+JWT_SECRET=change-me-use-a-long-secret-with-at-least-48-chars
+JWT_EXPIRATION=3600000
+ADMIN_EMAIL=admin@admin.com
+ADMIN_PASSWORD=change-me-before-production
 ```
+
+There is a `.env.example` file with the expected variables.
 
 Run the application:
 
@@ -295,10 +350,12 @@ Run the application:
 - [x] README completed
 
 ### Phase 9 — Security 🔲
-- [ ] Spring Security + JWT
-- [ ] User registration and login
-- [ ] Protected routes
-- [ ] Role-based access (`ADMIN`, `USER`)
+- [x] Spring Security + JWT
+- [x] User registration and login
+- [x] Protected routes
+- [x] Role-based access (`ADMIN`, `USER`)
+- [x] JSON responses for `401` and `403`
+- [x] Admin initialization by environment configuration
 
 ### Phase 10 — Deploy 🔲
 - [ ] Dockerfile
