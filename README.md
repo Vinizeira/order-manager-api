@@ -287,6 +287,51 @@ Run the application:
 ./mvnw spring-boot:run
 ```
 
+### Running with Docker
+
+You can also run the API and PostgreSQL together with Docker Compose:
+
+```bash
+docker compose up --build
+```
+
+The API will be available at:
+
+```text
+http://localhost:8081
+```
+
+Swagger UI:
+
+```text
+http://localhost:8081/swagger-ui/index.html
+```
+
+The PostgreSQL container is exposed on port `5433` to avoid conflicts with a local PostgreSQL installation:
+
+```text
+localhost:5433
+```
+
+Default development admin:
+
+```text
+email: admin@admin.com
+password: admin123
+```
+
+To stop the containers:
+
+```bash
+docker compose down
+```
+
+To remove the database volume as well:
+
+```bash
+docker compose down -v
+```
+
 ---
 
 ## 🛠️ Technologies
@@ -368,6 +413,11 @@ Run the application:
 - [x] Status transition validation
 - [x] Stock return when an order is cancelled
 - [x] Block changes to delivered or cancelled orders
+
+### Phase 11 — Docker ✅
+- [x] Dockerfile
+- [x] Docker Compose with API + PostgreSQL
+- [x] Docker instructions in README
 
 ---
 
