@@ -30,8 +30,10 @@ Every decision in this project — from architecture to business rules — was m
 - 👤 Client registration with CPF and phone formatting
 - 🗂️ Category management
 - 🧾 Order creation with multiple items
+- 🔄 Order status update flow
 - 💰 Automatic total calculation (`quantity × unit price`)
 - 📉 Automatic stock deduction on order creation
+- ♻️ Automatic stock return when an order is cancelled
 - 🚫 Block orders when stock is insufficient
 - ✅ Input validation with clear error messages
 - 🔍 Filters by status, client, date range, category and low stock
@@ -43,9 +45,8 @@ Every decision in this project — from architecture to business rules — was m
 - 🧑‍💼 Initial admin user created by environment configuration
 - 📖 Swagger/OpenAPI documentation with Bearer Token support
 
-### Planned
+### Possible Future Improvements
 
-- 🔄 Order status update (`PENDING → PAID → SHIPPED → DELIVERED → CANCELLED`)
 - 📊 Sales reports
 - 🐳 Docker and deployment
 
@@ -171,6 +172,7 @@ src/
 | GET | `/pedidos/cliente/{clienteId}` | ADMIN | Filter orders by client |
 | GET | `/pedidos/periodo?inicio={date}&fim={date}` | ADMIN | Filter orders by date range |
 | POST | `/pedidos` | USER / ADMIN | Create order |
+| PATCH | `/pedidos/{id}/status` | ADMIN | Update order status |
 
 ---
 
@@ -229,8 +231,12 @@ All errors return a standardized JSON response:
 
 ## 💡 Business Rules
 
-- Every order starts with status `PENDING`
+- Every order starts with status `PENDENTE`
 - Stock is automatically deducted when an order is created
+- Order status can follow the flow `PENDENTE → PAGO → ENVIADO → ENTREGUE`
+- Orders can be cancelled before delivery
+- Cancelled orders return their items to stock
+- Delivered or cancelled orders cannot be changed
 - Orders with insufficient stock are blocked with a clear error message
 - Order total is calculated automatically from items
 - CPF and phone are stored as digits only, formatted on response
@@ -357,11 +363,11 @@ Run the application:
 - [x] JSON responses for `401` and `403`
 - [x] Admin initialization by environment configuration
 
-### Phase 10 — Deploy 🔲
-- [ ] Dockerfile
-- [ ] Docker Compose with API + PostgreSQL
-- [ ] Deploy on Railway or Render
-- [ ] Public URL in README
+### Phase 10 — Order Status ✅
+- [x] Endpoint to update order status
+- [x] Status transition validation
+- [x] Stock return when an order is cancelled
+- [x] Block changes to delivered or cancelled orders
 
 ---
 
@@ -386,8 +392,6 @@ This project is used to practice:
 ```text
 Understand the concept → Apply in the project → Test → Refactor → Evolve
 ```
-
-This project evolves together with my learning process as a backend developer.
 
 ---
 
