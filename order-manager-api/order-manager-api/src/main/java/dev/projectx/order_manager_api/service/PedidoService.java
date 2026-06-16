@@ -1,5 +1,6 @@
 package dev.projectx.order_manager_api.service;
 
+import dev.projectx.order_manager_api.dto.AtualizarStatusPedidoRequest;
 import dev.projectx.order_manager_api.dto.ItemPedidoRequest;
 import dev.projectx.order_manager_api.dto.PedidoRequest;
 import dev.projectx.order_manager_api.dto.PedidoResponse;
@@ -10,6 +11,7 @@ import dev.projectx.order_manager_api.repository.ClienteRepository;
 import dev.projectx.order_manager_api.repository.PedidoRepository;
 import dev.projectx.order_manager_api.repository.ProdutoRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -28,6 +30,7 @@ public class PedidoService {
         this.produtoRepository = produtoRepository;
     }
 
+    @Transactional
     public PedidoResponse criar(PedidoRequest request){
         Cliente cliente = clienteRepository.findById(request.clienteId())
                 .orElseThrow(() -> new ResourceNotFoundException("Cliente não encontrado"));
@@ -108,6 +111,67 @@ public class PedidoService {
                         p.getStatus().name(),
                         p.getTotal()))
                 .toList();
+    }
+
+    @Transactional
+    public PedidoResponse atualizarStatus(Long id, AtualizarStatusPedidoRequest request) {
+        Pedido pedido = pedidoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Pedido não encontrado"));
+
+        StatusPedido statusAtual = pedido.getStatus();
+        StatusPedido novoStatus = request.status();
+
+        if (statusAtual == novoStatus) {
+            return toResponse(pedido);
+        }
+
+        if (statusAtual == StatusPedido.ENTREGUE || statusAtual == StatusPedido.CANCELADO) {
+            throw new BusinessException("Pedidos entregues ou cancelados não podem ser alterados");
+        }
+
+        if (!transicaoValida(statusAtual, novoStatus)) {
+            throw new BusinessException("Transição de status inválida: " + statusAtual + " para " + novoStatus);
+        }
+
+        if (novoStatus == StatusPedido.CANCELADO) {
+            devolverEstoque(pedido);
+        }
+
+        pedido.setStatus(novoStatus);
+        Pedido salvo = pedidoRepository.save(pedido);
+
+        return toResponse(salvo);
+    }
+
+    private boolean transicaoValida(StatusPedido statusAtual, StatusPedido novoStatus) {
+        if (novoStatus == StatusPedido.CANCELADO) {
+            return statusAtual != StatusPedido.ENTREGUE && statusAtual != StatusPedido.CANCELADO;
+        }
+
+        return switch (statusAtual) {
+            case PENDENTE -> novoStatus == StatusPedido.PAGO;
+            case PAGO -> novoStatus == StatusPedido.ENVIADO;
+            case ENVIADO -> novoStatus == StatusPedido.ENTREGUE;
+            case ENTREGUE, CANCELADO -> false;
+        };
+    }
+
+    private void devolverEstoque(Pedido pedido) {
+        for (ItemPedido item : pedido.getItens()) {
+            Produto produto = item.getProduto();
+            produto.setEstoque(produto.getEstoque() + item.getQuantidade());
+            produtoRepository.save(produto);
+        }
+    }
+
+    private PedidoResponse toResponse(Pedido pedido) {
+        return new PedidoResponse(
+                pedido.getId(),
+                pedido.getCliente().getNome(),
+                pedido.getData(),
+                pedido.getStatus().name(),
+                pedido.getTotal()
+        );
     }
 
 }

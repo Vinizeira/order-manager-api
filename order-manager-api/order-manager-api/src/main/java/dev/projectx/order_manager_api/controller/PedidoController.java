@@ -1,5 +1,6 @@
 package dev.projectx.order_manager_api.controller;
 
+import dev.projectx.order_manager_api.dto.AtualizarStatusPedidoRequest;
 import dev.projectx.order_manager_api.dto.PedidoRequest;
 import dev.projectx.order_manager_api.dto.PedidoResponse;
 import dev.projectx.order_manager_api.model.StatusPedido;
@@ -55,5 +56,13 @@ public class PedidoController {
             @RequestParam LocalDate inicio,
             @RequestParam LocalDate fim) {
         return service.buscarPorPeriodo(inicio, fim);
+    }
+
+    @PatchMapping("/{id}/status")
+    @Operation(summary = "Atualizar status do pedido", description = "Altera o status do pedido e devolve estoque em caso de cancelamento")
+    public ResponseEntity<PedidoResponse> atualizarStatus(
+            @PathVariable Long id,
+            @RequestBody @Valid AtualizarStatusPedidoRequest request) {
+        return ResponseEntity.ok(service.atualizarStatus(id, request));
     }
 }
